@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso al Panel Administrativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="card w-full max-w-lg p-12 bg-white shadow-2xl animate-fade">
+        <header class="text-center mb-12">
+            <div class="w-16 h-16 bg-blue-600 text-white rounded-3xl flex items-center justify-center text-3xl font-black mx-auto mb-8 shadow-xl shadow-blue-600/30">
+                P
+            </div>
+            <h1 id="page-title" class="text-3xl font-black text-slate-900 tracking-tight uppercase mb-3">Acceder al Panel</h1>
+            <p id="page-desc" class="text-slate-500 font-medium">Gestión profesional de contenidos fitness.</p>
+        </header>
+
+        <form id="auth-form" class="space-y-8">
+            <div id="register-fields" class="hidden space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Nombre Completo</label>
+                    <input type="text" id="full_name" class="input" placeholder="Nombre y Apellidos">
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Correo Electrónico</label>
+                    <input type="email" id="email" required class="input" placeholder="correo@ejemplo.com">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Contraseña</label>
+                    <input type="password" id="password" required class="input" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="pt-6">
+                <button type="submit" id="submit-btn" class="w-full btn btn-primary py-4 text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-600/30">
+                    Ingresar al Panel
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-12 pt-8 border-t border-slate-100 text-center">
+            <p class="text-sm font-medium text-slate-500">
+                <span id="toggle-text">¿Aún no tienes cuenta?</span>
+                <button id="toggle-auth" class="text-blue-600 font-black uppercase tracking-widest text-[10px] ml-2 hover:text-blue-700 transition-colors">Regístrate Aquí</button>
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { Auth, showPopup } from './assets/js/utils.js';
+
+        let isLogin = true;
+        const form = document.getElementById('auth-form');
+        const registerFields = document.getElementById('register-fields');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleBtn = document.getElementById('toggle-auth');
+        const pageTitle = document.getElementById('page-title');
+        const pageDesc = document.getElementById('page-desc');
+        const toggleText = document.getElementById('toggle-text');
+
+        toggleBtn.onclick = () => {
+            isLogin = !isLogin;
+            registerFields.classList.toggle('hidden');
+            pageTitle.innerText = isLogin ? 'Acceder al Panel' : 'Crear Nueva Cuenta';
+            pageDesc.innerText = isLogin ? 'Gestión profesional de contenidos fitness.' : 'Regístrate para comenzar a gestionar tu propio centro.';
+            submitBtn.innerText = isLogin ? 'Ingresar al Panel' : 'Registrar Cuenta';
+            toggleText.innerText = isLogin ? '¿Aún no tienes cuenta?' : '¿Ya eres usuario?';
+            toggleBtn.innerText = isLogin ? 'Regístrate Aquí' : 'Inicia Sesión';
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'PROCESANDO...';
+
+                if (isLogin) {
+                    await Auth.login(email, password);
+                    window.location.href = 'gym.html';
+                } else {
+                    const fullName = document.getElementById('full_name').value;
+
+                    if (!fullName) throw new Error('El nombre es obligatorio');
+
+                    await Auth.register(email, password, {
+                        full_name: fullName,
+                        role: 'gym-owner',
+                        business_unit: 'gym'
+                    });
+
+                    showPopup('Registro Exitoso', 'Por favor, confirma tu correo electrónico para activar el acceso.', 'success');
+                    isLogin = true;
+                    toggleBtn.click();
+                }
+            } catch (err) {
+                showPopup('Error de Acceso', err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = isLogin ? 'Ingresar al Panel' : 'Registrar Cuenta';
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valoración Fitness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12 max-w-2xl">
+        <header class="text-center mb-16 animate-fade">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase mb-4 tracking-tighter">Fitness Assessment</h1>
+            <p class="text-slate-500 font-medium">Completa este cuestionario para que nuestros profesionales puedan diseñar un plan a tu medida.</p>
+        </header>
+
+        <div class="card bg-white p-10 animate-fade">
+            <form id="fitness-test" class="space-y-12">
+                <div class="space-y-10">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">1. Objetivo principal</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="btn bg-slate-50 border border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-500 transition-all cursor-pointer p-4">
+                                <input type="radio" name="goal" value="perder_peso" class="hidden"> 📉 Perder Grasa
+                            </label>
+                            <label class="btn bg-slate-50 border border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-500 transition-all cursor-pointer p-4">
+                                <input type="radio" name="goal" value="ganar_musculo" class="hidden"> 💪 Ganar Músculo
+                            </label>
+                            <label class="btn bg-slate-50 border border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-500 transition-all cursor-pointer p-4">
+                                <input type="radio" name="goal" value="mejorar_resistencia" class="hidden"> 🏃‍♂️ Resistencia
+                            </label>
+                            <label class="btn bg-slate-50 border border-slate-200 text-slate-600 hover:bg-blue-50 hover:border-blue-500 transition-all cursor-pointer p-4">
+                                <input type="radio" name="goal" value="mantenimiento" class="hidden"> ✨ Salud General
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">2. Peso Actual</label>
+                            <input type="number" class="input" placeholder="Ej: 75">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">3. Altura</label>
+                            <input type="number" class="input" placeholder="Ej: 175">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">4. Nivel de Actividad Semanal</label>
+                        <select class="input bg-white cursor-pointer py-3 px-6 font-bold text-slate-600">
+                            <option value="sedentario">Sedentario</option>
+                            <option value="ligero">Ligero</option>
+                            <option value="moderado">Moderado</option>
+                            <option value="intenso">Intenso</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">5. Restricciones / Notas Médicas</label>
+                        <textarea rows="4" class="input resize-none" placeholder="Indica lesiones, alergias o preferencias especiales..."></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full btn btn-primary py-4 text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-600/30">
+                    Enviar Valoración
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderNavbar, showPopup } from './assets/js/utils.js';
+        renderNavbar();
+
+        document.getElementById('fitness-test').onsubmit = (e) => {
+            e.preventDefault();
+            showPopup('Enviado Correctamente', 'Tu valoración ha sido registrada. Un profesional revisará tus datos pronto.', 'success');
+        };
+    </script>
+</body>
+</html>

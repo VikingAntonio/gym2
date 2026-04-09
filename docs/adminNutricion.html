@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Nutrición</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">Nutrición</h1>
+                <p class="text-slate-500 font-medium mt-1">Biblioteca de recetas y planificación nutricional.</p>
+            </div>
+            <button id="btn-nueva-receta" class="btn btn-primary px-6 py-3 uppercase tracking-widest text-xs font-black shadow-lg shadow-blue-600/20">
+                <i class="fas fa-plus mr-2"></i> Nueva Receta
+            </button>
+        </header>
+
+        <div id="recetas-grid" class="admin-grid animate-fade">
+            <!-- Cargando -->
+            <div class="card flex flex-col items-center justify-center py-20 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl mb-4"></i>
+                <span class="text-sm font-black uppercase tracking-widest">Sincronizando recetas...</span>
+            </div>
+        </div>
+
+        <!-- Recipe Modal -->
+        <div id="modal-receta" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 overflow-y-auto">
+            <div class="card bg-white w-full max-w-4xl p-10 shadow-2xl animate-fade my-10">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 id="modal-title" class="text-2xl font-black text-slate-900 tracking-tight uppercase">Editor de Receta</h2>
+                    <button id="close-modal" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="recipe-form" class="space-y-10">
+                    <input type="hidden" id="recipe-id">
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <!-- Image & Media -->
+                        <div class="space-y-8">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Imagen de Presentación</label>
+                                <div id="drop-zone" class="border-2 border-dashed border-slate-200 rounded-[32px] p-8 text-center cursor-pointer hover:border-blue-400 transition-all bg-slate-50 relative overflow-hidden group min-h-[240px] flex flex-col items-center justify-center">
+                                    <div id="preview-container" class="absolute inset-0 hidden">
+                                        <img id="image-preview" src="" class="w-full h-full object-cover rounded-[32px]">
+                                        <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-white text-xs font-black uppercase tracking-widest">Cambiar Imagen</span>
+                                        </div>
+                                    </div>
+                                    <div id="upload-placeholder">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-slate-300 mb-4"></i>
+                                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Arrastra o selecciona archivo</p>
+                                    </div>
+                                    <input type="file" id="image-input" class="hidden" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Tiempo Prep</label>
+                                    <input type="number" id="prep_time" class="input" placeholder="Ej: 20">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Dificultad</label>
+                                    <select id="difficulty" class="input bg-white cursor-pointer">
+                                        <option value="Fácil">Baja</option>
+                                        <option value="Media">Media</option>
+                                        <option value="Difícil">Alta</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data & Macros -->
+                        <div class="space-y-6">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Nombre de la Receta</label>
+                                <input type="text" id="title" required class="input" placeholder="Ej: Bowl de Avena con Frutos Rojos">
+                            </div>
+                            <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Tipo de Dieta</label>
+                                <input type="text" id="diet_type" class="input" placeholder="Ej: Vegano, Proteico, Ayuno">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Calorías</label>
+                                    <input type="number" id="calories" class="input" placeholder="0">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Proteínas</label>
+                                    <input type="number" id="protein" class="input" placeholder="0">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Carbos</label>
+                                    <input type="number" id="carbs" class="input" placeholder="0">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Grasas</label>
+                                    <input type="number" id="fats" class="input" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Ingredientes</label>
+                            <textarea id="ingredients" rows="8" class="input resize-none" placeholder="1 taza de avena..."></textarea>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Instrucciones</label>
+                            <textarea id="instructions" rows="8" class="input resize-none" placeholder="1. Mezclar los ingredientes secos..."></textarea>
+                        </div>
+                    </div>
+
+
+                    <div class="pt-10 flex gap-6">
+                        <button type="submit" id="submit-btn" class="flex-grow btn btn-primary py-4 text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-600/30">
+                            Guardar Receta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { supabase, renderNavbar, Auth, showPopup, uploadToCloudinary, setupDragAndDrop, showConfirm, renderAdminSidebar } from './assets/js/utils.js';
+
+        let currentUser = null;
+        let isAdmin = false;
+        let imageUrl = '';
+        let loadedRecipes = [];
+
+        async function initPage() {
+            renderNavbar();
+            currentUser = await Auth.checkAccess(['gym-admin', 'gym-owner']);
+            if (!currentUser) return;
+
+            isAdmin = currentUser.role === 'gym-admin';
+
+            if (isAdmin) {
+                renderAdminSidebar(() => loadRecipes());
+            }
+
+            await loadRecipes();
+        }
+
+        async function loadRecipes() {
+            let query = supabase.from('gym_recipes').select('*');
+
+            const selectedOwnerId = Auth.getSelectedOwnerId();
+            if (isAdmin) {
+                if (selectedOwnerId) {
+                    query = query.eq('owner_id', selectedOwnerId);
+                }
+            } else {
+                query = query.eq('owner_id', currentUser.id);
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false });
+
+            if (error) return console.error(error);
+            loadedRecipes = data || [];
+            renderRecipes(loadedRecipes);
+        }
+
+        function renderRecipes(recipes) {
+            const grid = document.getElementById('recetas-grid');
+            if (recipes.length === 0) {
+                grid.innerHTML = '<div class="card col-span-full py-20 text-center text-slate-400">Aún no has creado ninguna receta profesional.</div>';
+                return;
+            }
+
+            grid.innerHTML = recipes.map(r => `
+                <div class="card group hover:border-blue-500 transition-all p-0 overflow-hidden flex flex-col">
+                    <div class="h-48 overflow-hidden bg-slate-100 relative">
+                        <img src="${r.image_url || 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80'}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 left-4">
+                            <span class="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-slate-900 border border-white/50">
+                                ${r.diet_type || 'Nutrición'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2 truncate">${r.title}</h3>
+                        <div class="flex items-center gap-4 text-slate-400 text-xs font-bold mb-6">
+                            <span class="flex items-center"><i class="far fa-clock mr-1.5"></i> ${r.prep_time || 0}'</span>
+                            <span class="flex items-center"><i class="fas fa-fire mr-1.5"></i> ${r.calories || 0} kcal</span>
+                        </div>
+                        <div class="mt-auto flex justify-between items-center pt-6 border-t border-slate-100">
+                            <button onclick="editRecipe('${r.id}')" class="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 transition-colors">
+                                EDITAR <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                            <button onclick="deleteRecipe('${r.id}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all border border-slate-100">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const modal = document.getElementById('modal-receta');
+        const form = document.getElementById('recipe-form');
+        const imagePreview = document.getElementById('image-preview');
+        const previewContainer = document.getElementById('preview-container');
+
+        document.getElementById('btn-nueva-receta').onclick = () => {
+            form.reset();
+            document.getElementById('recipe-id').value = '';
+            imageUrl = '';
+            previewContainer.classList.add('hidden');
+            document.getElementById('modal-title').innerText = 'Crear Receta';
+            modal.style.display = 'flex';
+        };
+
+        document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
+
+        setupDragAndDrop(
+            document.getElementById('drop-zone'),
+            document.getElementById('image-input'),
+            async (file) => {
+                try {
+                    const btn = document.getElementById('submit-btn');
+                    btn.disabled = true;
+                    btn.innerText = 'PROCESANDO IMAGEN...';
+
+                    imageUrl = await uploadToCloudinary(file);
+                    imagePreview.src = imageUrl;
+                    previewContainer.classList.remove('hidden');
+
+                    btn.disabled = false;
+                    btn.innerText = 'GUARDAR RECETA';
+                } catch (err) {
+                    showPopup('Error', 'Fallo al subir a Cloudinary', 'error');
+                }
+            }
+        );
+
+        window.editRecipe = (id) => {
+            const r = loadedRecipes.find(x => x.id == id);
+            if (!r) return;
+
+            document.getElementById('recipe-id').value = r.id;
+            document.getElementById('title').value = r.title;
+            document.getElementById('prep_time').value = r.prep_time;
+            document.getElementById('difficulty').value = r.difficulty || 'Media';
+            document.getElementById('diet_type').value = r.diet_type;
+            document.getElementById('calories').value = r.calories;
+            document.getElementById('protein').value = r.protein;
+            document.getElementById('carbs').value = r.carbs;
+            document.getElementById('fats').value = r.fats;
+            document.getElementById('ingredients').value = Array.isArray(r.ingredients) ? r.ingredients.join('\n') : r.ingredients;
+            document.getElementById('instructions').value = Array.isArray(r.instructions) ? r.instructions.join('\n') : r.instructions;
+
+            if (r.image_url) {
+                imageUrl = r.image_url;
+                imagePreview.src = r.image_url;
+                previewContainer.classList.remove('hidden');
+            }
+
+            document.getElementById('modal-title').innerText = 'Modificar Receta';
+            modal.style.display = 'flex';
+        };
+
+        window.deleteRecipe = async (id) => {
+            if (await showConfirm('Eliminar Receta', '¿Seguro que deseas eliminar esta receta de la biblioteca?')) {
+                const { error } = await supabase.from('gym_recipes').delete().eq('id', id);
+                if (error) return showPopup('Error', error.message, 'error');
+                loadRecipes();
+            }
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('recipe-id').value;
+            const data = {
+                title: document.getElementById('title').value,
+                image_url: imageUrl,
+                prep_time: parseInt(document.getElementById('prep_time').value) || 0,
+                difficulty: document.getElementById('difficulty').value,
+                diet_type: document.getElementById('diet_type').value,
+                calories: parseInt(document.getElementById('calories').value) || 0,
+                protein: parseInt(document.getElementById('protein').value) || 0,
+                carbs: parseInt(document.getElementById('carbs').value) || 0,
+                fats: parseInt(document.getElementById('fats').value) || 0,
+                ingredients: document.getElementById('ingredients').value.split('\n').filter(x => x.trim()),
+                instructions: document.getElementById('instructions').value.split('\n').filter(x => x.trim()),
+                owner_id: isAdmin ? (Auth.getSelectedOwnerId() || currentUser.id) : currentUser.id
+            };
+
+            const { error } = id
+                ? await supabase.from('gym_recipes').update(data).eq('id', id)
+                : await supabase.from('gym_recipes').insert([data]);
+
+            if (error) return showPopup('Error de Conexión', error.message, 'error');
+
+            modal.style.display = 'none';
+            showPopup('Guardado', 'La receta se ha actualizado en la biblioteca global.');
+            loadRecipes();
+        };
+
+        initPage();
+    </script>
+</body>
+</html>

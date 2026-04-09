@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipo Profesional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <header class="text-center mb-20 animate-fade">
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight uppercase mb-4 tracking-tighter">Equipo de Especialistas</h1>
+            <p class="text-slate-500 font-medium max-w-xl mx-auto">Profesionales certificados dedicados a maximizar tu potencial y alcanzar tus metas.</p>
+        </header>
+
+        <div id="trainers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 animate-fade">
+            <!-- Cargando -->
+            <div class="col-span-full py-20 text-center">
+                <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mb-4"></i>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Sincronizando perfiles profesionales...</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { supabase, renderNavbar } from './assets/js/utils.js';
+        renderNavbar();
+
+        const container = document.getElementById('trainers-container');
+
+        async function fetchTrainers() {
+            const params = new URLSearchParams(window.location.search);
+            const domain = params.get('domain');
+
+            let query = supabase.from('gym_trainers').select('*');
+
+            if (domain) {
+                const { data: userData } = await supabase
+                    .from('wisbe_users')
+                    .select('id')
+                    .ilike('domain', domain.trim())
+                    .maybeSingle();
+
+                if (userData) {
+                    query = query.eq('owner_id', userData.id);
+                }
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false });
+            if (error) return console.error(error);
+
+            renderTrainers(data);
+        }
+
+        function renderTrainers(trainers) {
+            if (trainers.length === 0) {
+                container.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-medium italic">No se han registrado entrenadores para este dominio.</div>';
+                return;
+            }
+
+            container.innerHTML = trainers.map(t => `
+                <div class="card bg-white group hover:border-blue-500 transition-all flex flex-col items-center text-center p-10 animate-fade">
+                    <div class="w-28 h-28 rounded-full border-4 border-slate-50 overflow-hidden mb-8 shadow-sm group-hover:scale-105 transition-transform duration-500">
+                        <img src="${t.image_url || 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80'}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="mb-6">
+                        <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest block mb-2 px-3 py-1 bg-blue-50 rounded-full inline-block border border-blue-100">${t.specialty}</span>
+                        <h3 class="text-xl font-bold text-slate-900 tracking-tight uppercase">${t.full_name}</h3>
+                    </div>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-8 line-clamp-3">${t.bio || 'Sin descripción adicional disponible.'}</p>
+                    <div class="mt-auto w-full pt-8 border-t border-slate-100 flex gap-4">
+                        ${t.whatsapp_url ? `
+                            <a href="${t.whatsapp_url}" target="_blank" class="flex-grow btn btn-primary py-3 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20">
+                                Contactar <i class="fab fa-whatsapp ml-2"></i>
+                            </a>
+                        ` : ''}
+                        ${t.instagram_url ? `
+                            <a href="https://instagram.com/${t.instagram_url.replace('@','')}" target="_blank" class="w-12 h-12 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center hover:bg-slate-200 hover:text-blue-500 transition-all">
+                                <i class="fab fa-instagram text-xl"></i>
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        fetchTrainers();
+    </script>
+</body>
+</html>

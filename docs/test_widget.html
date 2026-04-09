@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Previa de Integración</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="widget.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <header class="text-center mb-16 animate-fade">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase mb-4 tracking-tighter">Previsualización de Widget</h1>
+            <p class="text-slate-500 font-medium">Así es como tus clientes verán los módulos integrados en tu sitio web.</p>
+        </header>
+
+        <div class="space-y-20 animate-fade">
+            <!-- Widget Nutrición -->
+            <section class="card bg-white p-12 shadow-sm border-slate-200">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-[10px] font-black text-blue-600 uppercase tracking-widest px-4 py-1 bg-blue-50 rounded-full inline-block border border-blue-100">Módulo Nutrición</h2>
+                    <div class="h-px bg-slate-100 flex-grow ml-8"></div>
+                </div>
+                <div id="wisbe-nutricion" domain="wisbe.xyz" class="rounded-3xl border border-slate-100 shadow-xl overflow-hidden min-h-[600px] bg-white"></div>
+            </section>
+
+            <!-- Widget Rutinas -->
+            <section class="card bg-white p-12 shadow-sm border-slate-200">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-[10px] font-black text-orange-600 uppercase tracking-widest px-4 py-1 bg-orange-50 rounded-full inline-block border border-orange-100">Módulo Rutinas</h2>
+                    <div class="h-px bg-slate-100 flex-grow ml-8"></div>
+                </div>
+                <div id="wisbe-rutinas" domain="wisbe.xyz" class="rounded-3xl border border-slate-100 shadow-xl overflow-hidden min-h-[600px] bg-white"></div>
+            </section>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderNavbar } from './assets/js/utils.js';
+        renderNavbar();
+    </script>
+</body>
+</html>

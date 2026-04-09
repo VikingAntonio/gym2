@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Rutinas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">Rutinas</h1>
+                <p class="text-slate-500 font-medium mt-1">Diseñador dinámico de planes de entrenamiento semanal.</p>
+            </div>
+            <button id="btn-nueva-rutina" class="btn btn-primary px-6 py-3 uppercase tracking-widest text-xs font-black shadow-lg shadow-blue-600/20">
+                <i class="fas fa-plus mr-2"></i> Nuevo Plan
+            </button>
+        </header>
+
+        <div id="rutinas-list" class="space-y-6 animate-fade">
+            <!-- Cargando -->
+            <div class="card flex flex-col items-center justify-center py-20 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-2xl mb-4"></i>
+                <span class="text-sm font-black uppercase tracking-widest">Sincronizando planes...</span>
+            </div>
+        </div>
+
+        <!-- Routine Builder Modal -->
+        <div id="modal-rutina" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-start justify-center p-4 overflow-y-auto pt-10">
+            <div class="card bg-white w-full max-w-5xl p-10 shadow-2xl animate-fade my-10">
+                <div class="flex justify-between items-center mb-10 border-b border-slate-100 pb-8">
+                    <h2 id="modal-title" class="text-2xl font-black text-slate-900 tracking-tight uppercase">Constructor de Plan</h2>
+                    <button id="close-modal" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="routine-form" class="space-y-12">
+                    <input type="hidden" id="routine-id">
+
+                    <!-- Metadata Section -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div class="space-y-8">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Título del Plan Maestro</label>
+                                <input type="text" id="title" required class="input" placeholder="Ej: Powerlifting Nivel 1">
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Dificultad</label>
+                                    <select id="difficulty_level" class="input bg-white">
+                                        <option value="Principiante">Iniciación</option>
+                                        <option value="Intermedio">Intermedio</option>
+                                        <option value="Avanzado">Avanzado</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Semanas Totales</label>
+                                    <input type="number" id="plan_duration_weeks" class="input" value="4">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-8 rounded-[32px] border border-slate-100 space-y-6">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Público Objetivo</label>
+                                <div class="flex gap-4">
+                                    <select id="target_gender" class="input bg-white"><option value="Unisex">Cualquiera</option><option value="Hombre">Masculino</option><option value="Mujer">Femenino</option></select>
+                                    <input type="text" id="target_age_group" class="input" placeholder="Edad: 18-45">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Condiciones de Salud</label>
+                                <input type="text" id="health_conditions" class="input" placeholder="Ej: Sin problemas articulares">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Exercise Builder -->
+                    <div class="space-y-8">
+                        <div class="flex items-center gap-6">
+                            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Programación Semanal</h3>
+                            <div class="h-px bg-slate-100 flex-grow"></div>
+                            <button type="button" id="add-day" class="btn btn-primary text-[10px] font-black py-2 px-4 uppercase tracking-widest">
+                                <i class="fas fa-calendar-day mr-2"></i> Añadir Jornada
+                            </button>
+                        </div>
+
+                        <div id="days-container" class="space-y-6">
+                            <!-- Los días se generan dinámicamente -->
+                        </div>
+                    </div>
+
+
+                    <div class="pt-10 border-t border-slate-100 flex gap-6">
+                        <button type="submit" id="submit-btn" class="flex-grow btn btn-primary py-4 text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-600/30">
+                            Publicar Plan de Entrenamiento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { supabase, renderNavbar, Auth, showPopup, showConfirm, renderAdminSidebar } from './assets/js/utils.js';
+
+        let currentUser = null;
+        let isAdmin = false;
+        let loadedRoutines = [];
+        let exerciseData = [];
+
+        async function initPage() {
+            renderNavbar();
+            currentUser = await Auth.checkAccess(['gym-admin', 'gym-owner']);
+            if (!currentUser) return;
+
+            isAdmin = currentUser.role === 'gym-admin';
+
+            if (isAdmin) {
+                renderAdminSidebar(() => loadRoutines());
+            }
+
+            await loadRoutines();
+        }
+
+        async function loadRoutines() {
+            let query = supabase.from('gym_routines').select('*');
+
+            const selectedOwnerId = Auth.getSelectedOwnerId();
+            if (isAdmin) {
+                if (selectedOwnerId) {
+                    query = query.eq('owner_id', selectedOwnerId);
+                }
+            } else {
+                query = query.eq('owner_id', currentUser.id);
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false });
+            if (error) return console.error(error);
+            loadedRoutines = data;
+            renderRoutines(data);
+        }
+
+        function renderRoutines(routines) {
+            const list = document.getElementById('rutinas-list');
+            if (routines.length === 0) {
+                list.innerHTML = '<div class="card py-20 text-center text-slate-400 font-medium">Aún no has definido planes maestros de entrenamiento.</div>';
+                return;
+            }
+
+            list.innerHTML = routines.map(r => `
+                <div class="card group hover:border-blue-500 transition-all flex flex-col md:flex-row md:items-center gap-8 animate-fade">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl shrink-0 border border-blue-100 font-black">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight mb-2">${r.title}</h3>
+                        <div class="flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <span class="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-slate-500">${r.difficulty_level}</span>
+                            <span class="flex items-center"><i class="far fa-calendar-alt mr-2 text-blue-400"></i> ${r.plan_duration_weeks} Semanas</span>
+                            <span class="flex items-center"><i class="fas fa-users mr-2 text-blue-400"></i> ${r.target_gender}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-8">
+                        <button onclick="editRoutine('${r.id}')" class="btn bg-slate-50 text-slate-600 hover:bg-blue-600 hover:text-white transition-all px-4 py-2 text-[10px] font-black uppercase tracking-widest">
+                            Editar <i class="fas fa-edit ml-2"></i>
+                        </button>
+                        <button onclick="deleteRoutine('${r.id}')" class="btn bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all w-10 h-10 border border-slate-100">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const modal = document.getElementById('modal-rutina');
+        const form = document.getElementById('routine-form');
+        const daysContainer = document.getElementById('days-container');
+
+        document.getElementById('btn-nueva-rutina').onclick = () => {
+            form.reset();
+            document.getElementById('routine-id').value = '';
+            daysContainer.innerHTML = '';
+            document.getElementById('modal-title').innerText = 'Nuevo Maestro de Rutina';
+            modal.style.display = 'block';
+        };
+
+        document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
+
+        document.getElementById('add-day').onclick = () => addDayUI();
+
+        function addDayUI(dayData = { day: 'Lunes', exercises: [] }) {
+            const dayId = 'day-' + Date.now();
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'card bg-slate-50 border-slate-200 p-8 animate-fade day-row';
+            dayDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-8 border-b border-slate-200 pb-4">
+                    <div class="flex items-center gap-4">
+                        <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Nombre del Día</label>
+                        <input type="text" class="day-title input bg-white font-bold w-48 py-2 px-4" value="${dayData.day}">
+                    </div>
+                    <button type="button" class="text-slate-300 hover:text-red-500 transition-colors" onclick="this.closest('.day-row').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="exercises-list space-y-4"></div>
+                <button type="button" class="mt-6 text-[10px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest transition-colors flex items-center gap-2" onclick="addExerciseUI(this.previousElementSibling)">
+                    <i class="fas fa-plus-circle"></i> Añadir Ejercicio
+                </button>
+            `;
+            daysContainer.appendChild(dayDiv);
+            const exList = dayDiv.querySelector('.exercises-list');
+            dayData.exercises.forEach(ex => addExerciseUI(exList, ex));
+        }
+
+        window.addExerciseUI = (container, ex = { name: '', sets: '', reps: '', video: '' }) => {
+            const exDiv = document.createElement('div');
+            exDiv.className = 'grid grid-cols-1 lg:grid-cols-4 gap-4 bg-white p-5 rounded-2xl border border-slate-100 items-end animate-fade exercise-row';
+            exDiv.innerHTML = `
+                <div class="lg:col-span-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Ejercicio</label>
+                    <input type="text" class="ex-name input text-xs font-bold" placeholder="Ej: Press de Banca" value="${ex.name}">
+                </div>
+                <div>
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Series y Reps</label>
+                    <div class="flex gap-2">
+                        <input type="text" class="ex-sets input text-xs font-bold text-center" placeholder="3" value="${ex.sets}">
+                        <input type="text" class="ex-reps input text-xs font-bold text-center" placeholder="12" value="${ex.reps}">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">URL Video</label>
+                    <input type="text" class="ex-video input text-xs" placeholder="YouTube/Cloudinary" value="${ex.video}">
+                </div>
+                <div class="flex justify-end lg:pb-3">
+                    <button type="button" class="text-slate-200 hover:text-red-400 transition-colors" onclick="this.closest('.exercise-row').remove()">
+                        <i class="fas fa-minus-circle"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(exDiv);
+        }
+
+        window.editRoutine = (id) => {
+            const r = loadedRoutines.find(x => x.id == id);
+            if (!r) return;
+
+            document.getElementById('routine-id').value = r.id;
+            document.getElementById('title').value = r.title;
+            document.getElementById('difficulty_level').value = r.difficulty_level;
+            document.getElementById('plan_duration_weeks').value = r.plan_duration_weeks;
+            document.getElementById('target_gender').value = r.target_gender;
+            document.getElementById('target_age_group').value = r.target_age_group;
+            document.getElementById('health_conditions').value = r.health_conditions;
+
+            daysContainer.innerHTML = '';
+            if (r.exercises && Array.isArray(r.exercises)) {
+                r.exercises.forEach(day => addDayUI(day));
+            }
+
+            document.getElementById('modal-title').innerText = 'Modificar Plan';
+            modal.style.display = 'block';
+        };
+
+        window.deleteRoutine = async (id) => {
+            if (await showConfirm('Eliminar Plan', '¿Estás seguro de que deseas eliminar este plan maestro?')) {
+                const { error } = await supabase.from('gym_routines').delete().eq('id', id);
+                if (error) return showPopup('Error', error.message, 'error');
+                loadRoutines();
+            }
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('routine-id').value;
+
+            const weeksData = [];
+            document.querySelectorAll('.day-row').forEach(dayRow => {
+                const dayName = dayRow.querySelector('.day-title').value;
+                const exercises = [];
+                dayRow.querySelectorAll('.exercise-row').forEach(exRow => {
+                    exercises.push({
+                        name: exRow.querySelector('.ex-name').value,
+                        sets: exRow.querySelector('.ex-sets').value,
+                        reps: exRow.querySelector('.ex-reps').value,
+                        video: exRow.querySelector('.ex-video').value
+                    });
+                });
+                weeksData.push({ day: dayName, exercises });
+            });
+
+            const data = {
+                title: document.getElementById('title').value,
+                difficulty_level: document.getElementById('difficulty_level').value,
+                plan_duration_weeks: parseInt(document.getElementById('plan_duration_weeks').value) || 4,
+                target_gender: document.getElementById('target_gender').value,
+                target_age_group: document.getElementById('target_age_group').value,
+                health_conditions: document.getElementById('health_conditions').value,
+                exercises: weeksData,
+                owner_id: isAdmin ? (Auth.getSelectedOwnerId() || currentUser.id) : currentUser.id
+            };
+
+            const { error } = id
+                ? await supabase.from('gym_routines').update(data).eq('id', id)
+                : await supabase.from('gym_routines').insert([data]);
+
+            if (error) return showPopup('Error', error.message, 'error');
+
+            modal.style.display = 'none';
+            showPopup('Guardado', 'El plan maestro ha sido actualizado correctamente.');
+            loadRoutines();
+        };
+
+        initPage();
+    </script>
+</body>
+</html>

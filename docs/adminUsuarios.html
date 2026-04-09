@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight uppercase">Usuarios</h1>
+                <p class="text-slate-500 font-medium mt-1">Control de acceso y administración de roles del sistema.</p>
+            </div>
+            <button id="btn-nuevo-usuario" class="btn btn-primary px-6 py-3 uppercase tracking-widest text-xs font-black shadow-lg shadow-blue-600/20">
+                <i class="fas fa-plus mr-2"></i> Nuevo Registro
+            </button>
+        </header>
+
+        <div class="card bg-white border-slate-200 overflow-hidden animate-fade">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identidad</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rol</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Dominio</th>
+                            <th id="th-business" class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden">Unidad</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium italic">
+                                Sincronizando con base de datos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Form Modal -->
+        <div id="modal-usuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+            <div class="card bg-white w-full max-w-lg p-10 shadow-2xl animate-fade">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 id="modal-title" class="text-2xl font-black text-slate-900 tracking-tight uppercase">Registro de Usuario</h2>
+                    <button id="close-modal" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="user-form" class="space-y-8">
+                    <input type="hidden" id="user-id">
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Nombre Completo</label>
+                            <input type="text" id="full_name" required class="input" placeholder="Nombre y Apellidos">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Correo Electrónico</label>
+                            <input type="email" id="email" required class="input" placeholder="correo@ejemplo.com">
+                        </div>
+                        <div id="password-group">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Contraseña</label>
+                            <input type="password" id="password" class="input" placeholder="Mínimo 6 caracteres">
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Rol Asignado</label>
+                                <select id="role" class="input bg-white cursor-pointer">
+                                    <option value="gym-socios">Socio</option>
+                                    <option value="gym-entrenador">Entrenador</option>
+                                    <option value="gym-owner">Dueño</option>
+                                    <option value="gym-admin">Administrador</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">DOMINIO</label>
+                                <input type="text" id="domain" class="input" placeholder="ejemplo.com">
+                            </div>
+                        </div>
+                        <div id="business-group" class="hidden">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Unidad de Negocio</label>
+                            <select id="business_unit" class="input bg-white cursor-pointer">
+                                <option value="gym">Gimnasio</option>
+                                <option value="beauty">Salón de Belleza</option>
+                                <option value="construction">Construcción</option>
+                                <option value="freelance">Independiente</option>
+                                <option value="wisbe">Wisbe</option>
+                            </select>
+                        </div>
+                        <div id="owner-group" class="hidden">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Asignar a</label>
+                            <select id="owner_id_select" class="input bg-white cursor-pointer">
+                                <option value="">Sin Asignar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="pt-6">
+                        <button type="submit" id="submit-btn" class="w-full btn btn-primary py-4 text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-600/30">
+                            Procesar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { supabase, renderNavbar, Auth, showPopup, showConfirm, renderAdminSidebar } from './assets/js/utils.js';
+
+        let currentUser = null;
+        let isAdmin = false;
+        let loadedUsers = [];
+        let loadedOwners = [];
+
+        // Función de entrada ultra-segura
+        function initPage() {
+            try {
+                renderNavbar();
+
+                // 1. Identidad inmediata desde caché para no bloquear
+                const user = Auth.getUser();
+                if (user) {
+                    currentUser = user;
+                    isAdmin = user.role === 'gym-admin';
+                    if (isAdmin) {
+                        document.getElementById('th-business')?.classList.remove('hidden');
+                        document.getElementById('business-group')?.classList.remove('hidden');
+                        document.getElementById('owner-group')?.classList.remove('hidden');
+                        renderAdminSidebar(() => loadUsers());
+                        loadOwners();
+                    }
+                }
+
+                // 2. Cargar lista de usuarios DE INMEDIATO
+                loadUsers();
+
+                // 3. Validación de sesión en segundo plano (no bloqueante)
+                supabase.auth.getSession().then(({data: {session}}) => {
+                    if (!session) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    // Si el usuario es nuevo o cambió, refrescar
+                    if (!currentUser || currentUser.id !== session.user.id) {
+                        Auth.checkAccess(['gym-admin', 'gym-owner']).then(fresh => {
+                            if (fresh) {
+                                currentUser = fresh;
+                                isAdmin = fresh.role === 'gym-admin';
+                                loadUsers();
+                            }
+                        });
+                    }
+                }).catch(e => console.warn("Fallo validación silenciosa:", e));
+
+            } catch (err) {
+                console.error("Fallo crítico init:", err);
+            }
+        }
+
+        async function loadOwners() {
+            try {
+                const { data, error } = await supabase
+                    .from('wisbe_users')
+                    .select('id, full_name, email')
+                    .eq('role', 'gym-owner')
+                    .order('full_name');
+
+                if (error) throw error;
+
+                loadedOwners = data || [];
+                const select = document.getElementById('owner_id_select');
+                if (select) {
+                    select.innerHTML = '<option value="">Sin Asignar</option>' +
+                        loadedOwners.map(o => `<option value="${o.id}">${o.full_name || o.email}</option>`).join('');
+                }
+            } catch (err) {
+                console.error('Error loading owners:', err);
+            }
+        }
+
+        async function loadUsers() {
+            const list = document.getElementById('users-list');
+            if (!list) return;
+
+            // 1. Mostrar estado de carga real para confirmar actividad del JS
+            list.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium italic">
+                <i class="fas fa-sync fa-spin mr-2 text-blue-500"></i> Sincronizando con Wisbe...
+            </td></tr>`;
+
+            // 2. Hang Detector (detección de bucle RLS) - 5 segundos
+            const rlsDetector = setTimeout(() => {
+                if (loadedUsers.length === 0) {
+                    list.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-blue-500 font-medium italic">
+                        <i class="fas fa-shield-alt mb-4 text-3xl block text-blue-400"></i>
+                        <span class="text-lg font-black block mb-2 uppercase tracking-tight">Verificando Permisos Globales</span>
+                        La base de datos está tardando más de lo normal.<br>
+                        <div class="mt-4 p-5 bg-blue-50 border border-blue-100 rounded-[24px] text-[10px] text-blue-700 leading-relaxed uppercase font-black">
+                            Asegúrate de haber ejecutado el script <b class="underline">Azul.txt</b> en Supabase.
+                        </div>
+                    </td></tr>`;
+                }
+            }, 5000);
+
+            try {
+                let query = supabase.from('wisbe_users').select('*');
+
+                const selectedOwnerId = Auth.getSelectedOwnerId();
+                if (isAdmin) {
+                    if (selectedOwnerId) {
+                        query = query.eq('owner_id', selectedOwnerId);
+                    }
+                    // Si es admin y no hay owner seleccionado, NO filtramos para ver TODO
+                } else if (currentUser?.id) {
+                    query = query.eq('owner_id', currentUser.id);
+                }
+
+                const { data, error } = await query.order('created_at', { ascending: false });
+                clearTimeout(rlsDetector);
+
+                if (error) throw error;
+
+                loadedUsers = data || [];
+                renderUsers(loadedUsers);
+            } catch (err) {
+                clearTimeout(rlsDetector);
+                console.error('Load Error:', err);
+                list.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-red-500 font-bold italic">
+                    <i class="fas fa-exclamation-circle mb-2 block"></i> No se pudo cargar la lista: ${err.message}
+                </td></tr>`;
+            }
+        }
+
+        function renderUsers(users) {
+            const list = document.getElementById('users-list');
+            if (!list) return;
+
+            try {
+                if (!users || users.length === 0) {
+                    list.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No se encontraron registros activos en la base de datos.</td></tr>`;
+                    return;
+                }
+
+                const html = users.map(user => {
+                    if (!user) return '';
+                    const safeRole = (user.role || 'socio').replace('gym-', '');
+                    const safeName = user.full_name || user.email || 'Usuario';
+                    const initial = (safeName.charAt(0) || 'U').toUpperCase();
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-6 py-5">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black mr-4 border border-blue-100">
+                                        ${initial}
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-bold text-slate-800">${safeName}</span>
+                                        <span class="block text-xs text-slate-400">${user.email || '—'}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-slate-200">
+                                    ${safeRole}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span class="text-sm font-mono text-slate-500">${user.domain || '—'}</span>
+                            </td>
+                            <td class="px-6 py-5 ${isAdmin ? '' : 'hidden'}">
+                                <span class="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded">${user.business_unit || 'gym'}</span>
+                            </td>
+                            <td class="px-6 py-5 text-right">
+                                ${isAdmin ? `
+                                    <button onclick="editUser('${user.id}')" class="p-2 text-slate-400 hover:text-blue-600 transition-colors mr-2">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteUser('${user.id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : '<span class="text-[10px] text-slate-300 font-black uppercase italic">Sólo Lectura</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                list.innerHTML = html;
+            } catch (err) {
+                console.error("Error en renderUsers:", err);
+                list.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-red-400">Error visual en la tabla.</td></tr>`;
+            }
+        }
+
+        const modal = document.getElementById('modal-usuario');
+        const form = document.getElementById('user-form');
+
+        document.getElementById('btn-nuevo-usuario').onclick = () => {
+            if (!isAdmin) return showPopup('Restringido', 'Solo administradores globales pueden registrar nuevo personal.', 'error');
+            form.reset();
+            document.getElementById('user-id').value = '';
+            document.getElementById('modal-title').innerText = 'Nuevo Registro';
+            document.getElementById('password-group').classList.remove('hidden');
+            document.getElementById('email').disabled = false;
+
+            // Auto-select owner if sidebar has one
+            const selectedOwnerId = Auth.getSelectedOwnerId();
+            if (selectedOwnerId) {
+                document.getElementById('owner_id_select').value = selectedOwnerId;
+            }
+
+            modal.style.display = 'flex';
+        };
+
+        document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
+
+        window.editUser = (id) => {
+            const user = loadedUsers.find(u => u.id === id);
+            if (!user) return;
+
+            document.getElementById('user-id').value = user.id;
+            document.getElementById('full_name').value = user.full_name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('email').disabled = true;
+            document.getElementById('role').value = user.role;
+            document.getElementById('domain').value = user.domain || '';
+            if (isAdmin) {
+                document.getElementById('business_unit').value = user.business_unit || 'gym';
+                document.getElementById('owner_id_select').value = user.owner_id || '';
+            }
+            document.getElementById('password-group').classList.add('hidden');
+
+            document.getElementById('modal-title').innerText = 'Editar Registro';
+            modal.style.display = 'flex';
+        };
+
+        window.deleteUser = async (id) => {
+            if (id === currentUser.id) return showPopup('Error', 'No puedes eliminar tu propia cuenta.', 'error');
+
+            const confirm = await showConfirm('Eliminar Usuario', 'Esta acción es irreversible y podría afectar datos vinculados.');
+            if (confirm) {
+                const { error } = await supabase.from('wisbe_users').delete().eq('id', id);
+                if (error) return showPopup('Error', error.message, 'error');
+                showPopup('Éxito', 'Usuario eliminado correctamente');
+                loadUsers();
+            }
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value;
+            const email = document.getElementById('email').value;
+            const userData = {
+                email: email,
+                full_name: document.getElementById('full_name').value,
+                role: document.getElementById('role').value,
+                domain: document.getElementById('domain').value || null,
+                owner_id: isAdmin ? (document.getElementById('owner_id_select').value || null) : currentUser.id,
+                business_unit: isAdmin ? document.getElementById('business_unit').value : 'gym'
+            };
+
+            if (id) {
+                const { error } = await supabase.from('wisbe_users').update(userData).eq('id', id);
+                if (error) return showPopup('Error', error.message, 'error');
+                showPopup('Éxito', 'Perfil actualizado');
+            } else {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                try {
+                    const { data, error: authError } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: userData }
+                    });
+                    if (authError) throw authError;
+                    showPopup('Registro Exitoso', 'El usuario debe confirmar su correo para activar el acceso.');
+                } catch (err) {
+                    return showPopup('Error de Registro', err.message, 'error');
+                }
+            }
+            modal.style.display = 'none';
+            loadUsers();
+        };
+
+        initPage();
+    </script>
+</body>
+</html>

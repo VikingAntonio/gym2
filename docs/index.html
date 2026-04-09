@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Gestión Fitness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-16">
+        <!-- Hero Section -->
+        <section class="text-center max-w-4xl mx-auto mb-20 animate-fade">
+            <h1 class="text-5xl font-black text-slate-900 mb-6 tracking-tight">
+                Gestiona tu centro fitness con una <span class="text-blue-600">interfaz profesional</span>
+            </h1>
+            <p class="text-xl text-slate-600 mb-10 leading-relaxed">
+                Controla rutinas, nutrición y equipo desde un solo lugar. Nuestra plataforma te permite integrar módulos dinámicos directamente en tu propio sitio web.
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="login.html" class="btn btn-primary px-8 py-4 text-lg">Comenzar Ahora</a>
+                <a href="#features" class="btn bg-white border border-slate-200 px-8 py-4 text-lg hover:bg-slate-50 transition-colors">Ver Funciones</a>
+            </div>
+        </section>
+
+        <!-- Features Grid -->
+        <section id="features" class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+            <div class="card flex flex-col items-center text-center p-10 hover:shadow-lg transition-shadow">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Nutrición Inteligente</h3>
+                <p class="text-slate-600">Crea y organiza recetas detalladas con macros automáticos para tus clientes.</p>
+            </div>
+            <div class="card flex flex-col items-center text-center p-10 hover:shadow-lg transition-shadow">
+                <div class="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                    <i class="fas fa-dumbbell"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Rutinas Dinámicas</h3>
+                <p class="text-slate-600">Diseña planes de entrenamiento semanales con videos y guías paso a paso.</p>
+            </div>
+            <div class="card flex flex-col items-center text-center p-10 hover:shadow-lg transition-shadow">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mb-6">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Gestión de Equipo</h3>
+                <p class="text-slate-600">Administra perfiles de entrenadores y personal de forma centralizada.</p>
+            </div>
+        </section>
+
+        <!-- Integration Preview -->
+        <section class="card bg-slate-900 border-none p-12 text-white overflow-hidden relative">
+            <div class="relative z-10 max-w-2xl">
+                <h2 class="text-3xl font-bold mb-4">Integración Invisible</h2>
+                <p class="text-slate-400 mb-8 text-lg">
+                    Copia un simple código y muestra tus contenidos en tu propio dominio. Sin marcas externas, manteniendo tu identidad corporativa.
+                </p>
+                <a href="gym.html" class="text-blue-400 font-bold hover:text-blue-300 flex items-center gap-2">
+                    Explorar el panel de administración <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+        </section>
+    </main>
+
+    <footer class="container mx-auto px-4 py-12 border-t border-slate-200 text-center">
+        <p class="text-slate-500 text-sm">&copy; 2024 Plataforma de Gestión Fitness. Todos los derechos reservados.</p>
+    </footer>
+
+    <script type="module">
+        import { renderNavbar } from './assets/js/utils.js';
+        renderNavbar();
+    </script>
+</body>
+</html>

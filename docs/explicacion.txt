@@ -1,0 +1,33 @@
+EXPLICACIÓN DE ELEMENTOS - PLATAFORMA CORE
+
+SISTEMA DE NUTRICIÓN (RECETAS)
+------------------------------
+Cada receta está diseñada para proporcionar información nutricional precisa y facilitar la preparación:
+
+- Nombre de la Receta (title): Identificador claro del platillo (ej: Salmón al Eneldo).
+- Categoría (category): Clasifica el plato según el momento de consumo (Desayuno, Almuerzo, Cena, Snack, Postre).
+- Tipo de Dieta (diet_type): Filtro para preferencias alimenticias (Keto, Vegana, Equilibrada, Alta Proteína, Sin Gluten).
+- Macronutrientes (protein, carbs, fats): Cantidad en gramos de Proteínas, Carbohidratos y Grasas por porción.
+- Calorías (calories): Valor energético total del plato.
+- Tiempo Prep (prep_time): Estimación del tiempo necesario para tener listo el plato.
+- Dificultad (difficulty): Nivel de complejidad culinaria (Fácil, Media, Pro).
+- Ingredientes: Listado de insumos necesarios.
+- Instrucciones: Guía paso a paso para la elaboración.
+- Imagen: Representación visual del resultado final.
+
+SISTEMA DE ENTRENAMIENTO (RUTINAS)
+----------------------------------
+Las rutinas se estructuran en fases temporales para una progresión lógica:
+
+- Título del Plan (title): Nombre comercial o descriptivo de la rutina (ej: Transformación 90 Días).
+- Resumen (description): Explicación breve de lo que se busca lograr con el plan.
+- Dificultad (difficulty_level): Nivel de exigencia física (Novato, Guerrero, Élite).
+- Duración (plan_duration_weeks): Tiempo total que el usuario debe seguir el plan (1, 4 o 12 semanas).
+- Género (target_gender): Optimización del plan según el sexo (Unisex, Masculino, Femenino).
+- Edad (target_age_group): Segmento de edad recomendado (Niño, Joven, Adulto, Senior).
+- Condiciones de Salud (health_conditions): Advertencias o adaptaciones para condiciones específicas (Asma, Lesiones, etc.).
+- Programación (exercises): Estructura organizada por:
+    * Semanas (Weeks): Fases del plan.
+    * Días (Days): Sesiones de entrenamiento específicas por día.
+    * Ejercicios (Moves): Nombre del movimiento, Series (S), Repeticiones (R) y tiempo de Descanso (⏳).
+- Imagen de Portada: Identidad visual de la rutina.

@@ -1,0 +1,168 @@
+
+:root {
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --radius-lg: 1rem;
+    --radius-md: 0.5rem;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+}
+
+/* Base Utility Classes */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.input {
+    width: 100%;
+    padding: 0.625rem;
+    background-color: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input:focus {
+    border-color: var(--primary);
+    ring: 2px solid var(--primary);
+}
+
+/* Specific Layouts */
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.nav-container {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Admin Sidebar Styles */
+#admin-sidebar {
+    position: fixed;
+    top: 140px; /* Align with header */
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar-closed {
+    left: -380px !important;
+}
+
+.admin-sidebar-open {
+    left: 0 !important;
+}
+
+.admin-sidebar-content {
+    width: 380px; /* Made bigger */
+    background: white;
+    padding: 2.5rem;
+    border-radius: 0 40px 40px 0;
+    box-shadow: 20px 0 60px rgba(0,0,0,0.1);
+    border: 2px solid var(--border);
+    border-left: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 85vh; /* Increased height */
+}
+
+.admin-sidebar-tab {
+    width: 40px; /* Thinner by default */
+    height: 160px;
+    background: var(--primary);
+    border-radius: 0 24px 24px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 10px 0 30px rgba(59, 130, 246, 0.3);
+    position: absolute;
+    right: -40px; /* Match thinner width */
+    top: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar-tab:hover {
+    width: 60px; /* Expands on hover */
+    right: -60px;
+}
+
+.admin-sidebar-tab span {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: white;
+    font-weight: 900;
+    font-size: 14px;
+    letter-spacing: 2px;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.active-owner {
+    border-color: var(--primary) !important; /* Changed to Blue */
+    border-width: 2px !important;
+    background-color: #eff6ff !important; /* Light blue background */
+}
+
+/* Hide scrollbar but keep functionality */
+.custom-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+.custom-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}

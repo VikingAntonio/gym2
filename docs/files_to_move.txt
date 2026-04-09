@@ -1,0 +1,29 @@
+ARCHIVOS NECESARIOS PARA MIGRAR EL PANEL ADMINISTRATIVO (BRAND-NEUTRAL):
+
+Para que el programa de administración funcione en tu otro repositorio/dominio, debes mover los siguientes archivos y carpetas manteniendo la estructura de directorios:
+
+DIRECTORIOS Y ARCHIVOS BASE:
+- docs/gym.html            (Dashboard principal de gestión)
+- docs/adminNutricion.html   (Gestor de recetas y biblioteca)
+- docs/adminRutinas.html     (Gestor de planes y entrenamientos)
+- docs/adminEntrenadores.html (Gestor de equipo profesional)
+- docs/adminUsuarios.html    (Gestor de roles y accesos)
+- docs/login.html            (Acceso y registro de administradores)
+- docs/index.html            (Página de entrada / Landing)
+
+CONFIGURACIÓN Y LÓGICA (Críticos):
+- docs/js/config.js          (Contiene las credenciales de Supabase y Cloudinary)
+- docs/js/utils.js           (Lógica central de autenticación y servicios)
+
+ESTILOS Y ACTIVOS:
+- docs/css/styles.css        (Sistema de diseño moderno y utilidades)
+
+ARCHIVOS DE INTEGRACIÓN Y VISTA PÚBLICA:
+- docs/nutricion.html        (Vista pública de recetas para clientes)
+- docs/rutinas.html          (Vista pública de planes de entrenamiento)
+- docs/entrenadores.html     (Vista pública del equipo profesional)
+- docs/widget.js             (Script para integración externa en otros sitios)
+- docs/test_widget.html      (Entorno de prueba para la integración)
+- docs/test.html             (Cuestionario de valoración fitness)
+
+NOTA: Asegúrate de configurar correctamente las variables en 'docs/js/config.js' en el nuevo repositorio para que apunten a tus instancias de Supabase y Cloudinary. Este sistema es ahora totalmente marca-neutral.

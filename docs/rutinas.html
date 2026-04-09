@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes de Entrenamiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./assets/css/styleGYM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="main-nav"></nav>
+
+    <main class="container mx-auto px-4 py-12">
+        <header class="text-center mb-16 animate-fade">
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight uppercase mb-4">Planes de Entrenamiento</h1>
+            <p class="text-slate-500 font-medium max-w-xl mx-auto">Rutinas profesionales diseñadas para cada nivel y objetivo deportivo.</p>
+        </header>
+
+        <div id="routines-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 animate-fade">
+            <!-- Cargando -->
+            <div class="col-span-full py-20 text-center">
+                <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mb-4"></i>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Sincronizando planes de entrenamiento...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Routine Modal -->
+    <div id="routine-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl relative animate-fade my-10 min-h-[80vh] flex flex-col">
+            <button id="close-modal" class="absolute top-8 right-8 w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all z-10">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <div id="modal-header" class="p-10 lg:p-16 border-b border-slate-100 bg-slate-50"></div>
+            <div id="modal-body" class="p-10 lg:p-16 flex-grow overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase, renderNavbar } from './assets/js/utils.js';
+        renderNavbar();
+
+        let allRoutines = [];
+        const container = document.getElementById('routines-container');
+
+        async function fetchRoutines() {
+            const params = new URLSearchParams(window.location.search);
+            const domain = params.get('domain');
+
+            let query = supabase.from('gym_routines').select('*');
+
+            if (domain) {
+                const { data: userData } = await supabase
+                    .from('wisbe_users')
+                    .select('id')
+                    .ilike('domain', domain.trim())
+                    .maybeSingle();
+
+                if (userData) {
+                    query = query.eq('owner_id', userData.id);
+                }
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false });
+            if (error) return console.error(error);
+
+            allRoutines = data;
+            renderRoutines(data);
+        }
+
+        function renderRoutines(routines) {
+            if (routines.length === 0) {
+                container.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-medium">No se han publicado rutinas todavía.</div>';
+                return;
+            }
+
+            container.innerHTML = routines.map(r => `
+                <div class="card group hover:border-blue-500 transition-all cursor-pointer flex flex-col p-8" onclick="openRoutine('${r.id}')">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-8 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-100">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2 uppercase tracking-tight">${r.title}</h3>
+                    <div class="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8">
+                        <span class="px-2 py-0.5 bg-slate-50 rounded border border-slate-100">${r.difficulty_level}</span>
+                        <span class="flex items-center"><i class="far fa-calendar-alt mr-2"></i> ${r.plan_duration_weeks} Semanas</span>
+                    </div>
+                    <div class="mt-auto pt-6 border-t border-slate-100 flex items-center text-blue-600 text-[10px] font-black uppercase tracking-widest">
+                        Explorar Plan <i class="fas fa-arrow-right ml-2 group-hover:translate-x-2 transition-transform"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.openRoutine = (id) => {
+            const r = allRoutines.find(x => x.id === id);
+            if (!r) return;
+
+            const modal = document.getElementById('routine-modal');
+            const header = document.getElementById('modal-header');
+            const body = document.getElementById('modal-body');
+
+            header.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest block mb-2">${r.difficulty_level}</span>
+                        <h2 class="text-4xl font-black text-slate-900 tracking-tight uppercase">${r.title}</h2>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="bg-white px-6 py-3 rounded-2xl border border-slate-200">
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Duración</p>
+                            <p class="text-slate-700 font-bold">${r.plan_duration_weeks} Semanas</p>
+                        </div>
+                        <div class="bg-white px-6 py-3 rounded-2xl border border-slate-200">
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Público</p>
+                            <p class="text-slate-700 font-bold">${r.target_gender}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            body.innerHTML = `
+                <div class="space-y-12">
+                    ${(r.exercises || []).map((day, idx) => `
+                        <div class="animate-fade" style="animation-delay: ${idx * 0.1}s">
+                            <div class="flex items-center gap-4 mb-8">
+                                <h4 class="text-sm font-black text-slate-900 uppercase tracking-widest bg-slate-100 px-6 py-2 rounded-full border border-slate-200">${day.day}</h4>
+                                <div class="h-px bg-slate-100 flex-grow"></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                ${day.exercises.map(ex => `
+                                    <div class="card bg-slate-50 border-slate-200 flex items-center justify-between p-6">
+                                        <div>
+                                            <p class="text-slate-900 font-bold uppercase tracking-tight text-sm mb-1">${ex.name}</p>
+                                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                                                <span class="text-blue-500">${ex.sets}</span> Series &times; <span class="text-blue-500">${ex.reps}</span> Repeticiones
+                                            </p>
+                                        </div>
+                                        ${ex.video ? `
+                                            <a href="${ex.video}" target="_blank" class="w-10 h-10 bg-white text-blue-500 rounded-full flex items-center justify-center border border-slate-200 hover:bg-blue-500 hover:text-white transition-all shadow-sm">
+                                                <i class="fas fa-play text-xs ml-0.5"></i>
+                                            </a>
+                                        ` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+
+        document.getElementById('close-modal').onclick = () => {
+            document.getElementById('routine-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        fetchRoutines();
+    </script>
+</body>
+</html>
